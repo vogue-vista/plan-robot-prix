@@ -7,11 +7,14 @@ import datetime
 st.set_page_config(page_title="Alerte Prix Pro", page_icon="🤖")
 st.title("🤖 Moniteur de Prix pour Entreprises")
 
-# --- SYSTÈME DE SÉCURITÉ CLIENT ---
+# --- 🌟 NOUVEAU SYSTÈME DE CLÉS UNIQUES 🌟 ---
 mot_de_passe_client = st.text_input("Entrez votre clé d'activation client :", type="password")
 
-if mot_de_passe_client != "Client30Dollars":
-    st.warning("⚠️ Veuillez entrer une clé d'activation valide pour utiliser le robot.")
+# C'est ici que vous ajoutez une nouvelle clé entre guillemets dès qu'un client paye 30 $
+cles_valides = ["Client_Alex94", "Client_BoutiquePro", "FleuristeMontreal", "MonPremierTest"]
+
+if mot_de_passe_client not in cles_valides:
+    st.warning("⚠️ Clé d'activation invalide ou expirée. Veuillez régulariser votre abonnement à 30 $/mois.")
     st.stop()
 
 # --- FORMULAIRE DU CLIENT ---
@@ -19,7 +22,6 @@ with st.form("form_robot"):
     url_site = st.text_input("Lien URL du site concurrent :", value="https://scrapethissite.com")
     email_client = st.text_input("Votre adresse courriel :", value="test@courriel.com")
     
-    # 🌟 LE NOUVEAU BOUTON SE PLACE ICI (Dans le formulaire)
     choix_duree = st.selectbox(
         "Combien de temps voulez-vous surveiller ce site ?",
         options=["2 heures (Test)", "1 jour (24h)", "7 jours", "30 jours"]
@@ -31,7 +33,6 @@ with st.form("form_robot"):
 if activer:
     st.success("🚀 Robot de surveillance démarré en continu !")
     
-    # Conversion du choix textuel du client en vraies heures pour le script
     if choix_duree == "2 heures (Test)":
         heures_de_surveillance = 2
     elif choix_duree == "1 jour (24h)":
@@ -41,7 +42,6 @@ if activer:
     else:
         heures_de_surveillance = 720  # 30 jours
     
-    # Calcul automatique de l'heure d'arrêt
     heure_demarrage = datetime.datetime.now()
     heure_fin = heure_demarrage + datetime.timedelta(hours=heures_de_surveillance)
     
@@ -53,7 +53,6 @@ if activer:
     ancien_prix = None
     compteur_verif = 0
     
-    # Boucle qui tourne tant qu'on n'a pas atteint la date de fin choisie
     while datetime.datetime.now() < heure_fin:
         compteur_verif += 1
         zone_logs.markdown(f"🔄 **Vérification en cours...** (Total de scans effectués : `{compteur_verif}`)")
@@ -88,6 +87,3 @@ if activer:
         time.sleep(900)
         
     st.warning("⏱️ Le temps de surveillance choisi est écoulé. Le robot s'est arrêté.")
-
-
-
