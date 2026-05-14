@@ -62,6 +62,6 @@ if activer:
         time.sleep(4)
         
     st.balloons()  # Petite animation de célébration quand le test réussit !
-    status_texte.markdown("### ✅ Session de test complétée sans bogue !")
+    status_texte.markdown("### ✅ site verifier avec succes !")
 
 
