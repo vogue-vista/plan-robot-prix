@@ -5,6 +5,12 @@ import time
 
 st.set_page_config(page_title="Alerte Prix Pro", page_icon="🤖")
 st.title("🤖 Moniteur de Prix pour Entreprises")
+# --- SYSTÈME DE SÉCURITÉ CLIENT ---
+mot_de_passe_client = st.text_input("Entrez votre clé d'activation client :", type="password")
+
+if mot_de_passe_client != "Client30Dollars":
+    st.warning("⚠️ Veuillez entrer une clé d'activation valide pour utiliser le robot.")
+    st.stop()
 
 # Formulaire d'entrée
 with st.form("form_robot"):
