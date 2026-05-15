@@ -5,52 +5,63 @@ import time
 import datetime
 import resend
 
-# 🔑 TA CLÉ DE COURRIEL GRATUITE (À obtenir sur resend.com)
-resend.api_key = "re_123456789" 
+# 🔑 CONFIGURATIONS ET CLÉS API
+resend.api_key = "re_123456789"
+
+# 💳 REMPLACEZ CECI PAR VOTRE LIEN DE PAIEMENT PAYPAL COMPLET
+PAYPAL_SUBSCRIBE_URL = "https://paypal.com"
 
 st.set_page_config(page_title="Alerte Prix Pro", page_icon="🤖")
 st.title("🤖 Moniteur de Prix pour Entreprises")
 
 # --- 🧠 SYSTÈME DE MÉMOIRE CACHÉE (SESSION STATE) ---
-# Si la mémoire de connexion n'existe pas encore, on la crée à "Faux"
 if "connecte" not in st.session_state:
     st.session_state.connecte = False
 
-# Si le client n'est pas encore connecté, on affiche le formulaire de clé
+# --- 1. ÉCRAN DE PAIEMENT PAYPAL ET PAYWALL ---
 if not st.session_state.connecte:
-    with st.form("form_securite"):
-        st.subheader("🔑 Activation du logiciel")
-        mot_de_passe_client = st.text_input("Entrez votre clé d'activation client :", type="password")
-        bouton_connexion = st.form_submit_button("Déverrouiller le robot")
-
-    cles_valides = ["Client_Alex94", "Client_BoutiquePro", "FleuristeMontreal", "MonPremierTest"]
-
-    if bouton_connexion:
-        if mot_de_passe_client in cles_valides:
-            st.session_state.connecte = True  # 🔓 On enregistre dans la mémoire que c'est BON
-            st.rerun()  # On recharge la page immédiatement pour afficher le robot
-        else:
-            st.error("⚠️ Clé d'activation invalide ou expirée.")
+    st.subheader("💳 Accès au logiciel (Abonnement requis)")
+    st.write("Le moniteur de prix tourne en continu pour surveiller vos concurrents et doper vos marges.")
     
-    st.stop()  # On arrête le code ici tant que st.session_state.connecte est Faux
+    # Bouton d'achat PayPal officiel (Style primaire Streamlit en couleur jaune/or si possible via CSS, ou bleu standard)
+    st.link_button("🟡 S'abonner pour 30$ / mois via PayPal", PAYPAL_SUBSCRIBE_URL, type="primary")
+    
+    st.markdown("---")
+    
+    # Formulaire de déverrouillage après achat
+    with st.form("form_securite"):
+        st.subheader("🔑 Déjà abonné ? Activez votre session")
+        mot_de_passe_client = st.text_input("Entrez votre clé d'activation client reçue après votre achat :", type="password")
+        bouton_connexion = st.form_submit_button("Déverrouiller le robot")
+        
+        # Ajoutez ici manuellement les clés à donner à vos clients payants
+        cles_valides = ["Client_Alex94", "Client_BoutiquePro", "FleuristeMontreal", "MonPremierTest", "Paypal_User_2026"]
+        
+        if bouton_connexion:
+            if mot_de_passe_client in cles_valides:
+                st.session_state.connecte = True
+                st.success("🔓 Accès accordé ! Chargement du tableau de bord...")
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.error("⚠️ Clé d'activation invalide ou paiement non vérifié.")
+                
+    st.stop() # Bloque l'accès au reste de l'application
 
 # --- 2. TABLEAU DE BORD DU CLIENT (S'affiche uniquement si connecté est Vrai) ---
-st.success("🔓 Clé d'activation valide ! Bienvenue sur votre tableau de bord.")
+st.success("🔓 Abonnement Actif ! Bienvenue sur votre tableau de bord.")
 
-# Bouton de déconnexion pour le client (optionnel mais professionnel)
-if st.button("🔴 Se déconnecter"):
+if st.button("🔴 Se déconnecter / Fermer la session"):
     st.session_state.connecte = False
     st.rerun()
 
 with st.form("form_robot"):
     url_site = st.text_input("Lien URL du site concurrent :", value="https://scrapethissite.com")
     email_client = st.text_input("Votre adresse courriel pour recevoir les alertes :", value="test@courriel.com")
-    
     choix_duree = st.selectbox(
         "Combien de temps voulez-vous surveiller ce site ?",
         options=["2 heures (Test)", "1 jour (24h)", "7 jours", "30 jours"]
     )
-    
     activer = st.form_submit_button("Lancer la surveillance")
 
 # --- 3. LOGIQUE DU ROBOT ET ALERTES EN CONTINU ---
@@ -69,13 +80,12 @@ if activer:
         heures_de_surveillance = 168
     else:
         heures_de_surveillance = 720
-    
+        
     heure_fin = datetime.datetime.now() + datetime.timedelta(hours=heures_de_surveillance)
     st.info(f"⏳ Le robot fonctionnera en continu jusqu'au : {heure_fin.strftime('%Y-%m-%d %H:%M:%S')}")
     
     zone_logs = st.empty()
     zone_prix = st.empty()
-    
     ancien_prix = None
     compteur_verif = 0
     
@@ -89,19 +99,15 @@ if activer:
             }
             reponse = requests.get(url_site, headers=entetes, timeout=10)
             code_html = reponse.text
-            
             resultat = re.search(r'(\d+[\.,]\d+)', code_html)
             
             if resultat:
                 prix_actuel = resultat.group(1).strip() + " $"
-                
                 if ancien_prix is None:
                     ancien_prix = prix_actuel
                     zone_prix.info(f"🤖 Valeur initiale repérée : **{prix_actuel}**")
-                
                 elif prix_actuel != ancien_prix:
                     zone_prix.error(f"🚨 ALERTE : Le prix a changé ! {ancien_prix} -> **{prix_actuel}**")
-                    
                     try:
                         resend.Emails.send({
                             "from": "Robot Prix <onboarding@resend.dev>",
@@ -119,17 +125,14 @@ if activer:
                         st.toast("📧 Courriel d'alerte envoyé avec succès !")
                     except Exception as error_mail:
                         st.sidebar.error(f"Erreur d'envoi du courriel : {error_mail}")
-                    
                     ancien_prix = prix_actuel
                 else:
                     zone_prix.success(f"😴 RAS : Le prix est stable à **{prix_actuel}**")
             else:
                 zone_prix.warning("⚠️ Aucun format de prix détecté lors de ce scan.")
-                
         except Exception as e:
             zone_prix.error(f"❌ Erreur de connexion au site : {e}")
-        
-        # Mis à 10 secondes pour te laisser tester la boucle sans attendre 15 minutes
+            
         time.sleep(10)
         
     st.warning("⏱️ Le temps de surveillance choisi est écoulé. Le robot s'est arrêté.")
