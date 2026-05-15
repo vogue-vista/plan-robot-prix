@@ -7,7 +7,7 @@ import resend  # Outil officiel d'envoi de courriels
 
 # 🔑 CONFIGURATION DE LA CLÉ DE COURRIEL GRATUITE
 # Vous obtiendrez cette clé en ouvrant un compte gratuit sur resend.com
-resend.api_key = "re_123456789" 
+resend.api_key = re_K6dKkydS_8sy3ProUZZEm393JvLj1WSRR
 
 st.set_page_config(page_title="Alerte Prix Pro", page_icon="🤖")
 st.title("🤖 Moniteur de Prix pour Entreprises")
